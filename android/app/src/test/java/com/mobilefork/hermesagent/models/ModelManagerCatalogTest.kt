@@ -22,6 +22,23 @@ import java.util.concurrent.atomic.AtomicReference
 @RunWith(RobolectricTestRunner::class)
 class ModelManagerCatalogTest {
     @Test
+    fun smolLm3ProfileIsDiscoverableButNeverReleaseCertifiedByDefault() {
+        val entry = ModelManagerViewModel.buildDefaultCatalog()
+            .single { it.id == "smollm3-3b-q4-k-m-gguf" }
+
+        assertEquals("bartowski/HuggingFaceTB_SmolLM3-3B-GGUF", entry.repoId)
+        assertEquals("main", entry.revision)
+        assertEquals("HuggingFaceTB_SmolLM3-3B-Q4_K_M.gguf", entry.filePath)
+        assertEquals("519732558d5fa7420ab058e1b776dcfe73da78013c2fe59c7ca43c325ef89132", entry.sha256)
+        assertEquals(1_915_305_792L, entry.approximateSizeBytes)
+        assertEquals(listOf(ModelRuntimeBackend.LLAMA_CPP), entry.supportedBackends)
+        assertFalse(entry.isMobileRecommended)
+        assertTrue("experimental" in entry.tags)
+        assertFalse(entry.supportsImageInput)
+        assertFalse(entry.supportsAudioInput)
+    }
+
+    @Test
     fun readyStateRequiresAStartedBackendAndRealCompletionProof() {
         assertFalse(
             isModelRuntimeReady(
