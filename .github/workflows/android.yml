@@ -5,6 +5,7 @@ on:
     branches:
       - feat/termux-install-path
       - codex/termux-five-goals
+      - codex/android-v-honor-local-agent
       - 'codex/android-v*'
       - 'codex/android-chaquopy-*'
   pull_request:
