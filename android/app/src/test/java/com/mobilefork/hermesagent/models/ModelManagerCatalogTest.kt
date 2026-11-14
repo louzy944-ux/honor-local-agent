@@ -200,21 +200,26 @@ class ModelManagerCatalogTest {
         val originalPreferredId = downloadStore.preferredDownloadId()
         val originalPendingAutoStartId = downloadStore.pendingAutoStartRecordId()
 
-        val entries = ModelManagerViewModel.buildDefaultCatalog().let { catalog ->
-            // Exercise each backend with a model that supports only that backend.
-            // A dual-backend catalog entry is intentionally unsuitable here: setPreferred()
-            // selects LiteRT-LM first for entries which advertise both runtimes.
-            listOf(
-                requireNotNull(catalog.firstOrNull {
-                    ModelRuntimeBackend.LITERT_LM in it.supportedBackends &&
-                        ModelRuntimeBackend.LLAMA_CPP !in it.supportedBackends
-                }) { "Catalog must contain a LiteRT-LM-only model for backend persistence coverage" },
-                requireNotNull(catalog.firstOrNull {
-                    ModelRuntimeBackend.LLAMA_CPP in it.supportedBackends &&
-                        ModelRuntimeBackend.LITERT_LM !in it.supportedBackends
-                }) { "Catalog must contain a llama.cpp-only model for backend persistence coverage" },
-            )
+        val verifiedEntries = ModelManagerViewModel.buildDefaultCatalog().mapNotNull { entry ->
+            val artifact = entry.filePath.takeIf { it.isNotBlank() }?.let { filePath ->
+                VerifiedLocalModelArtifacts.find(entry.repoId, filePath)
+            } ?: return@mapNotNull null
+            entry to artifact
         }
+        // setPreferred() resolves verified artifacts by exact repo, filename, revision and size.
+        // Use one certified model per backend so the fixture exercises that production path.
+        val entries = listOf(
+            requireNotNull(verifiedEntries.firstOrNull { (entry, artifact) ->
+                artifact.runtime.equals("litert-lm", ignoreCase = true) &&
+                    ModelRuntimeBackend.LITERT_LM in entry.supportedBackends &&
+                    ModelRuntimeBackend.LLAMA_CPP !in entry.supportedBackends
+            }) { "Catalog must contain a verified LiteRT-LM-only model" },
+            requireNotNull(verifiedEntries.firstOrNull { (entry, artifact) ->
+                artifact.runtime.equals("llama.cpp", ignoreCase = true) &&
+                    ModelRuntimeBackend.LLAMA_CPP in entry.supportedBackends &&
+                    ModelRuntimeBackend.LITERT_LM !in entry.supportedBackends
+            }) { "Catalog must contain a verified llama.cpp-only model" },
+        )
         try {
             // Keep this test independent from pending auto-start state left by other tests.
             if (originalPendingAutoStartId.isNotBlank()) {
@@ -222,25 +227,25 @@ class ModelManagerCatalogTest {
             }
             settingsStore.save(AppSettings(onDeviceBackend = BackendKind.NONE.persistedValue))
             downloadStore.saveDownloads(
-                entries.map { entry ->
+                entries.map { (entry, artifact) ->
                     completedRecord(
                         id = "download-${entry.id}",
-                        repo = entry.repoId,
-                        revision = entry.revision,
-                        fileName = entry.filePath.ifBlank { entry.displayName },
-                        runtime = if (ModelRuntimeBackend.LITERT_LM in entry.supportedBackends) {
+                        repo = artifact.repoId,
+                        revision = artifact.revision,
+                        fileName = artifact.fileName,
+                        runtime = if (artifact.runtime.equals("litert-lm", ignoreCase = true)) {
                             "LiteRT-LM"
                         } else {
                             "GGUF"
                         },
-                        bytes = entry.approximateSizeBytes,
+                        bytes = artifact.expectedBytes,
                     )
                 },
             )
 
             val viewModel = ModelManagerViewModel(application)
-            entries.forEach { entry ->
-                val expectedBackend = if (ModelRuntimeBackend.LITERT_LM in entry.supportedBackends) {
+            entries.forEach { (entry, artifact) ->
+                val expectedBackend = if (artifact.runtime.equals("litert-lm", ignoreCase = true)) {
                     BackendKind.LITERT_LM
                 } else {
                     BackendKind.LLAMA_CPP
