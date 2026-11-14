@@ -198,6 +198,7 @@ class ModelManagerCatalogTest {
         val originalSettings = settingsStore.load()
         val originalDownloads = downloadStore.loadDownloads()
         val originalPreferredId = downloadStore.preferredDownloadId()
+        val originalPendingAutoStartId = downloadStore.pendingAutoStartRecordId()
 
         val entries = ModelManagerViewModel.buildDefaultCatalog().let { catalog ->
             listOf(
@@ -210,6 +211,10 @@ class ModelManagerCatalogTest {
             )
         }
         try {
+            // Keep this test independent from pending auto-start state left by other tests.
+            if (originalPendingAutoStartId.isNotBlank()) {
+                downloadStore.clearPendingAutoStartRecordId(originalPendingAutoStartId)
+            }
             settingsStore.save(AppSettings(onDeviceBackend = BackendKind.NONE.persistedValue))
             downloadStore.saveDownloads(
                 entries.map { entry ->
@@ -245,6 +250,9 @@ class ModelManagerCatalogTest {
             settingsStore.save(originalSettings)
             downloadStore.saveDownloads(originalDownloads)
             downloadStore.setPreferredDownloadId(originalPreferredId)
+            if (originalPendingAutoStartId.isNotBlank()) {
+                downloadStore.setPendingAutoStartRecordId(originalPendingAutoStartId)
+            }
         }
     }
 
