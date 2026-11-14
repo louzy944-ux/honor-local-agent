@@ -24,6 +24,17 @@ class HermesExternalTermuxBridgeTest {
     }
 
     @Test
+    fun onlyFixedReadOnlyBatteryCommandIsExposed() {
+        assertTrue(
+            HermesExternalTermuxBridge.DiagnosticCommand.BATTERY_STATUS.executable ==
+                "/data/data/com.termux/files/usr/bin/termux-battery-status",
+        )
+        assertTrue(
+            HermesExternalTermuxBridge.DiagnosticCommand.values().size == 1,
+        )
+    }
+
+    @Test
     fun readinessDetailExplainsTheTermuxConfigurationGate() {
         val status = HermesExternalTermuxBridge.status(context)
 
