@@ -807,6 +807,27 @@ class ModelManagerViewModel(application: Application) : AndroidViewModel(applica
      */
     companion object {
         internal fun buildDefaultCatalog(): List<ModelCatalogEntry> = listOf(
+            // User-targeted SmolLM3 GGUF profile. This is deliberately experimental:
+            // it has not passed Agent's physical-device completion/tool-use matrix.
+            ModelCatalogEntry(
+                id = "smollm3-3b-q4-k-m-gguf",
+                displayName = "SmolLM3 3B Q4_K_M (GGUF, experimental)",
+                description = "Experimental 3B GGUF build for local llama.cpp testing on HONOR devices. Check free storage before downloading; Arabic quality and tool calling require separate device tests.",
+                repoId = "bartowski/HuggingFaceTB_SmolLM3-3B-GGUF",
+                revision = "main",
+                filePath = "HuggingFaceTB_SmolLM3-3B-Q4_K_M.gguf",
+                sha256 = "519732558d5fa7420ab058e1b776dcfe73da78013c2fe59c7ca43c325ef89132",
+                supportedBackends = listOf(ModelRuntimeBackend.LLAMA_CPP),
+                approximateSizeBytes = 1_915_305_792L,
+                recommendedRamBytes = 6_000_000_000L,
+                supportsQuantization = true,
+                supportsImageInput = false,
+                supportsAudioInput = false,
+                isMobileRecommended = false,
+                tags = listOf("smollm3", "huggingface", "gguf", "llama.cpp", "experimental", "3b", "arabic-test"),
+                author = "HuggingFaceTB / bartowski",
+                license = "Apache-2.0",
+            ),
             // Gemma 4 remains discoverable, but is experimental until an exact artifact and
             // hardware path pass the content-addressed release matrix.
             ModelCatalogEntry(
