@@ -1,11 +1,14 @@
 package com.mobilefork.hermesagent.device
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.os.Build
+import java.util.concurrent.atomic.AtomicInteger
+import org.json.JSONObject
 
 /**
  * Security boundary for the separately installed Termux + Termux:API apps.
@@ -18,6 +21,20 @@ object HermesExternalTermuxBridge {
     private const val TERMUX_PACKAGE = "com.termux"
     private const val TERMUX_API_PACKAGE = "com.termux.api"
     private const val RUN_COMMAND_PERMISSION = "com.termux.permission.RUN_COMMAND"
+    private const val RUN_COMMAND_ACTION = "com.termux.RUN_COMMAND"
+    private const val RUN_COMMAND_SERVICE = "com.termux.app.RunCommandService"
+    private const val EXTRA_COMMAND_PATH = "com.termux.RUN_COMMAND_PATH"
+    private const val EXTRA_ARGUMENTS = "com.termux.RUN_COMMAND_ARGUMENTS"
+    private const val EXTRA_WORKDIR = "com.termux.RUN_COMMAND_WORKDIR"
+    private const val EXTRA_BACKGROUND = "com.termux.RUN_COMMAND_BACKGROUND"
+    private const val EXTRA_PENDING_INTENT = "pendingIntent"
+    private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr/bin"
+    private const val TERMUX_HOME = "/data/data/com.termux/files/home"
+    private val requestIds = AtomicInteger(4100)
+
+    enum class DiagnosticCommand(val executable: String) {
+        BATTERY_STATUS("$TERMUX_PREFIX/termux-battery-status"),
+    }
 
     data class Status(
         val termuxInstalled: Boolean,
@@ -47,6 +64,74 @@ object HermesExternalTermuxBridge {
             readyForExternalCommands = ready,
             detail = detail,
         )
+    }
+
+    /**
+     * Run only a fixed, read-only Termux:API diagnostic. No model-provided
+     * command, executable path, or arguments are accepted.
+     *
+     * Results are delivered to HermesTermuxResultService and persisted locally.
+     * Termux >= 0.109 is required for the PendingIntent result channel.
+     */
+    fun requestBatteryStatus(context: Context): JSONObject {
+        val app = context.applicationContext
+        val status = status(app)
+        if (!status.readyForExternalCommands) {
+            return JSONObject()
+                .put("ok", false)
+                .put("accepted", false)
+                .put("error", status.detail)
+                .put("execution_mode", "termux_external_not_ready")
+        }
+
+        val requestId = requestIds.incrementAndGet()
+        val resultIntent = Intent(app, HermesTermuxResultService::class.java)
+            .putExtra(HermesTermuxResultService.EXTRA_REQUEST_ID, requestId)
+        val pendingFlags = PendingIntent.FLAG_ONE_SHOT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
+        val resultPendingIntent = PendingIntent.getService(
+            app,
+            requestId,
+            resultIntent,
+            pendingFlags,
+        )
+
+        val command = DiagnosticCommand.BATTERY_STATUS
+        val intent = Intent(RUN_COMMAND_ACTION).apply {
+            setClassName(TERMUX_PACKAGE, RUN_COMMAND_SERVICE)
+            putExtra(EXTRA_COMMAND_PATH, command.executable)
+            putExtra(EXTRA_ARGUMENTS, emptyArray<String>())
+            putExtra(EXTRA_WORKDIR, TERMUX_HOME)
+            putExtra(EXTRA_BACKGROUND, true)
+            putExtra(EXTRA_PENDING_INTENT, resultPendingIntent)
+            putExtra("com.termux.RUN_COMMAND_LABEL", "Hermes battery diagnostic")
+            putExtra("com.termux.RUN_COMMAND_DESCRIPTION", "Read battery status using Termux:API")
+        }
+
+        return runCatching {
+            app.startService(intent)
+            JSONObject()
+                .put("ok", true)
+                .put("accepted", true)
+                .put("request_id", requestId)
+                .put("command", "termux-battery-status")
+                .put("execution_mode", "termux_external_pending_result")
+                .put("message", "Battery diagnostic was sent to Termux. Read the result with lastBatteryStatusResult().")
+        }.getOrElse { error ->
+            JSONObject()
+                .put("ok", false)
+                .put("accepted", false)
+                .put("error", error.message ?: error.javaClass.simpleName)
+                .put("execution_mode", "termux_external_start_failed")
+        }
+    }
+
+    fun lastBatteryStatusResult(context: Context): JSONObject? {
+        val raw = context.applicationContext
+            .getSharedPreferences(HermesTermuxResultService.PREFERENCES, Context.MODE_PRIVATE)
+            .getString(HermesTermuxResultService.LAST_BATTERY_RESULT, null)
+            ?: return null
+        return runCatching { JSONObject(raw) }.getOrNull()
     }
 
     /**
