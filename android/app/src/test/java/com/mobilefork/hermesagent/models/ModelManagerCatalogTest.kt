@@ -201,13 +201,18 @@ class ModelManagerCatalogTest {
         val originalPendingAutoStartId = downloadStore.pendingAutoStartRecordId()
 
         val entries = ModelManagerViewModel.buildDefaultCatalog().let { catalog ->
+            // Exercise each backend with a model that supports only that backend.
+            // A dual-backend catalog entry is intentionally unsuitable here: setPreferred()
+            // selects LiteRT-LM first for entries which advertise both runtimes.
             listOf(
                 requireNotNull(catalog.firstOrNull {
-                    ModelRuntimeBackend.LITERT_LM in it.supportedBackends
-                }),
+                    ModelRuntimeBackend.LITERT_LM in it.supportedBackends &&
+                        ModelRuntimeBackend.LLAMA_CPP !in it.supportedBackends
+                }) { "Catalog must contain a LiteRT-LM-only model for backend persistence coverage" },
                 requireNotNull(catalog.firstOrNull {
-                    ModelRuntimeBackend.LLAMA_CPP in it.supportedBackends
-                }),
+                    ModelRuntimeBackend.LLAMA_CPP in it.supportedBackends &&
+                        ModelRuntimeBackend.LITERT_LM !in it.supportedBackends
+                }) { "Catalog must contain a llama.cpp-only model for backend persistence coverage" },
             )
         }
         try {
