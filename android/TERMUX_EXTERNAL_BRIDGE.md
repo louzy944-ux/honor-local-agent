@@ -26,13 +26,19 @@ app's UID. It is therefore equivalent to granting a powerful local automation
 capability. The model must never supply an arbitrary executable path, shell
 string, or unrestricted argument list.
 
-The implementation in this branch currently provides installation and
-permission readiness checks only. It does not yet execute commands or claim
-that Termux:API results are available to the agent. The next implementation
-step must add a fixed command registry, explicit user approval for sensitive
-operations, bounded execution, cancellation, and a result-return path using a
-PendingIntent. Read-only diagnostics should be qualified before any write,
-communication, or device-control actions are exposed.
+The branch now includes one narrowly allowlisted, read-only diagnostic:
+`termux-battery-status`. The app sends the fixed executable path to
+`com.termux.app.RunCommandService` with a one-shot mutable PendingIntent on
+Android 12+, then stores the returned stdout, stderr, exit code, and Termux
+error details in private app preferences through `HermesTermuxResultService`.
+The result can be read by `HermesExternalTermuxBridge.lastBatteryStatusResult()`.
+
+This is a bridge primitive, not yet a chat-agent tool or a visible diagnostics
+screen. The model cannot choose a command or arguments. No write, network,
+communication, or device-control commands are exposed. Termux must be version
+0.109 or newer for result delivery. The command must be requested while the
+Agent app is in the foreground; the app must also have the RUN_COMMAND
+permission and Termux must have `allow-external-apps=true`.
 
 ## Protocol reference
 
