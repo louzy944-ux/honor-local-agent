@@ -145,6 +145,10 @@
         </activity>
 
         <service
+            android:name=".device.HermesTermuxResultService"
+            android:exported="false" />
+
+        <service
             android:name=".backend.HermesRuntimeService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
