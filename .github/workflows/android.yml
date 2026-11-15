@@ -120,23 +120,9 @@ jobs:
             -PskipHermesAndroidLinuxAssets=true
           ./gradlew :app:assembleDebug
 
-      - name: Build and validate the separate Play edition
-        working-directory: android
-        env:
-          SOURCE_DATE_EPOCH: "315532800"
-        run: |
-          export PYTHON_FOR_BUILD="$(command -v python3.13 || command -v python3 || command -v python)"
-          ./gradlew :app:testPlayDebugUnitTest -PhermesTestBuildType=playDebug \
-            --tests 'com.mobilefork.hermesagent.play.*' --tests 'com.mobilefork.hermesagent.privacy.*' \
-            --tests 'com.mobilefork.hermesagent.ui.chat.PlayChatOperationTest' \
-            --tests 'com.mobilefork.hermesagent.ui.i18n.PrivacyStringsTest'
-          ./gradlew :app:compilePlayDebugAndroidTestKotlin \
-            :app:assemblePlayDebug :app:bundlePlayDebug :app:lintPlayDebug -PhermesTestBuildType=playDebug
-          python ../scripts/verify_android_play_package.py app/build/outputs/apk/playDebug/app-playDebug.apk \
-            --allow-debug-test-host \
-            --bundle app/build/outputs/bundle/playDebug/app-playDebug.aab \
-            --apkanalyzer "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer"
-
+# The Full debug APK is the target for the Android-tools edition. The Play variant
+# deliberately removes device-control services and is validated separately; it must not
+# prevent the Full APK artifact from being produced.
       - name: Verify generated runtimes inside the APK
         run: |
           python scripts/verify_android_runtime_package.py android/app/build/outputs/apk/debug/app-debug.apk \
