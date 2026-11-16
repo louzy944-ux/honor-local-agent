@@ -83,7 +83,7 @@ class NativeToolCallingChatClientTest {
                 .map { properties.getJSONObject("action").getJSONArray("enum").getString(it) }
                 .toSet(),
         )
-        assertEquals("زر حفظ", properties.getJSONObject("text_contains").getString("const"))
+        assertEquals(listOf("زر حفظ"), (0 until properties.getJSONObject("text_contains").getJSONArray("enum").length()).map { properties.getJSONObject("text_contains").getJSONArray("enum").getString(it) })
     }
 
     @Test
