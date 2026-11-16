@@ -3341,7 +3341,7 @@ class NativeToolCallingChatClient(
             Regex("""^(?:what\s+do\s+you\s+remember|what\s+have\s+you\s+remembered|what(?:'s|\s+is)\b|which\b|who\s+is\b|where\s+am\s+i\b)"""),
             Regex("""^(?:sandbox status|linux sandbox status|alpine sandbox status|screenshot|screen snapshot|visible ui snapshot|device status|phone status|top apps|wifi scan|wi-fi scan|sensor snapshot|bluetooth scan)\s*[.!?]?$"""),
             Regex("""^(?:(?:请|请帮我|帮我|现在|今天|明天|后天|今晚|稍后)\s*)*(?:创建|写入|保存|追加|编辑|删除|运行|执行|列出|截屏|截图|点击|点按|打开|提醒我|设置提醒|设个提醒|创建提醒|安排任务|取消|记住)"""),
-            Regex("""^(?:افتح|افتحي|قم\s+بفتح|شغل|شغّل|اعرض|أظهر|اظهر|افحص|تحقق|اقرأ|صور|صوّر|خذ|اضغط|انقر|اكبس|ابحث)\b"""),
+            Regex("""^(?:افتح|افتحي|قم\s+بفتح|قوم\s+بفتح|شغل|شغّل|روح\s+إلى|اذهب\s+إلى|ادخل\s+إلى|اعرض|أظهر|اظهر|افحص|تحقق|اقرأ|صور|صوّر|خذ|اضغط|انقر|اكبس|ابحث)(?=$|\s)"""),
             Regex("""^(?:crea|escribe|guarda|añade|anade|edita|elimina|ejecuta|ejecute|lista|muestra|haz|toma|pulsa|toca|abre|recuérdame|recuerdame|configura|programa|cancela|recuerda)\b"""),
             Regex("""^(?:erstelle|schreibe|speichere|hänge|haenge|bearbeite|lösche|loesche|führe|fuehre|führ|liste|zeige|mache|tippe|klicke|öffne|offne|erinnere|stelle|plane|storniere|merke|behalte)\b"""),
             Regex("""^(?:crie|escreva|salve|adicione|edite|exclua|remova|execute|executa|liste|mostre|faça|faca|tire|toque|clique|abra|lembre|defina|agende|cancele|guarde)\b"""),
