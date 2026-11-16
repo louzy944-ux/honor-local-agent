@@ -3126,11 +3126,17 @@ class NativeToolCallingChatClient(
             }
             if (
                 startsWithAny(
-                    "open the settings", "open phone settings", "open android settings",
-                    // Arabic explicit requests to open Android Settings.
                     "افتح الإعدادات", "افتح الاعدادات", "افتح إعدادات الهاتف", "افتح اعدادات الهاتف",
                     "افتح تطبيق الإعدادات", "افتح تطبيق الاعدادات", "قم بفتح الإعدادات", "قم بفتح الاعدادات",
-                    "شغل الإعدادات", "شغّل الإعدادات", "打开设置", "打开手机设置",
+                    "شغل الإعدادات", "شغّل الإعدادات",
+                )
+            ) {
+                add("android_ui_tool")
+            }
+            if (
+                startsWithAny(
+                    "open the settings", "open phone settings", "open android settings",
+                    "打开设置", "打开手机设置",
                     "abre los ajustes", "abre la configuración", "abre la configuracion",
                     "öffne die einstellungen", "offne die einstellungen",
                     "abra as configurações", "abra as configuracoes",
