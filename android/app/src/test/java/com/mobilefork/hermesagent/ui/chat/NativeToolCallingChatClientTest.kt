@@ -7,12 +7,19 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import java.io.InterruptedIOException
 
+@RunWith(RobolectricTestRunner::class)
 class NativeToolCallingChatClientTest {
+    private val nativeClient by lazy {
+        NativeToolCallingChatClient(RuntimeEnvironment.getApplication())
+    }
     @Test
     fun arabicOpenSettingsRequestSelectsAndroidUiTool() {
-        val specs = NativeToolCallingChatClient.initialToolSpecsFor(
+        val specs = nativeClient.initialToolSpecsFor(
             userText = "افتح تطبيق الإعدادات في هاتفك",
             mode = "stable",
             providerId = "local",
@@ -26,7 +33,7 @@ class NativeToolCallingChatClientTest {
     }
 
     private fun offeredActionValues(userText: String, toolName: String): Set<String> {
-        val specs = NativeToolCallingChatClient.initialToolSpecsFor(
+        val specs = nativeClient.initialToolSpecsFor(
             userText = userText,
             mode = "stable",
             providerId = "local",
@@ -60,7 +67,7 @@ class NativeToolCallingChatClientTest {
 
     @Test
     fun arabicTapRequestIsBoundToTheRequestedVisibleLabel() {
-        val specs = NativeToolCallingChatClient.initialToolSpecsFor(
+        val specs = nativeClient.initialToolSpecsFor(
             userText = "اضغط على زر حفظ",
             mode = "stable",
             providerId = "local",
