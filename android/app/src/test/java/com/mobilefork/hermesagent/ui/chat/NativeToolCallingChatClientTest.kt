@@ -11,6 +11,21 @@ import java.io.InterruptedIOException
 
 class NativeToolCallingChatClientTest {
     @Test
+    fun arabicOpenSettingsRequestSelectsAndroidUiTool() {
+        val specs = NativeToolCallingChatClient.initialToolSpecsFor(
+            userText = "افتح تطبيق الإعدادات في هاتفك",
+            mode = "stable",
+            providerId = "local",
+            llamaCppRuntimeLane = "default",
+        )
+        val names = (0 until specs.length()).mapNotNull { index ->
+            specs.optJSONObject(index)?.optJSONObject("function")?.optString("name")
+        }
+        assertTrue(names.contains("android_ui_tool"))
+        assertFalse(names.contains("android_system_tool"))
+    }
+
+    @Test
     fun initialNativeMessagesIncludePriorConversationBeforeCurrentPrompt() {
         val messages = NativeToolCallingChatClient.buildInitialNativeMessages(
             systemMessage = JSONObject().put("role", "system").put("content", "system"),
