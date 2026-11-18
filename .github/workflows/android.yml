@@ -54,7 +54,9 @@ jobs:
       - name: Restore reusable Python and Rust build tooling
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          path: ~/.cache/hermes-android-python-tooling
+          path: |
+            ~/.cache/hermes-android-python-tooling
+            ~/.gradle/hermes-python-runtime
           key: ${{ runner.os }}-hermes-python-tooling-py313-${{ hashFiles('hermes_android/python_runtime.lock.json', 'requirements-android-chaquopy.txt', 'scripts/prepare_android_python_runtime.py', 'scripts/build_android_mcp_wheels.py') }}
 
       - name: Build the genuine Android Python SDK stack from source
@@ -64,7 +66,9 @@ jobs:
         if: ${{ success() }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          path: ~/.cache/hermes-android-python-tooling
+          path: |
+            ~/.cache/hermes-android-python-tooling
+            ~/.gradle/hermes-python-runtime
           key: ${{ runner.os }}-hermes-python-tooling-py313-${{ hashFiles('hermes_android/python_runtime.lock.json', 'requirements-android-chaquopy.txt', 'scripts/prepare_android_python_runtime.py', 'scripts/build_android_mcp_wheels.py') }}
 
       - name: Install Python test dependencies
