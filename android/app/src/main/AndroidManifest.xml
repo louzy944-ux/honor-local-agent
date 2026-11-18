@@ -54,6 +54,7 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
+        <package android:name="com.termux" />
         <package android:name="com.google.android.gm" />
         <package android:name="com.zhiliaoapp.musically" />
         <package android:name="com.instagram.android" />
@@ -141,6 +142,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".device.HermesTermuxResultService"
+            android:exported="false" />
 
         <service
             android:name=".backend.HermesRuntimeService"
