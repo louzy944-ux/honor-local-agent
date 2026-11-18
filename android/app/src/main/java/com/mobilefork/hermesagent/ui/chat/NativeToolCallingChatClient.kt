@@ -3110,11 +3110,16 @@ class NativeToolCallingChatClient(
         fun startsWithAny(vararg phrases: String): Boolean = phrases.any { lower.startsWith(it) }
 
         return buildSet {
+            if (startsWithAny(
+                    "ابحث", "فتش", "دور لي على", "دورلي على", "جيبلي معلومات عن",
+                    "search the web for", "search online for", "look up", "find online",
+                )
+            ) {
+                add("web_search_tool")
+            }
             if (
                 startsWithAny(
-                    "ابحث", "فتش", "دور لي على", "دورلي على", "جيبلي معلومات عن",
                     // English
-                    "search the web for", "search online for", "look up", "find online",
                     "write a file", "create a file", "save this file", "append to file", "append to the file",
                     // Chinese
                     "创建文件", "创建一个文件", "写入文件", "保存文件", "追加到文件",
