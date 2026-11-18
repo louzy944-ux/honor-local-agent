@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -49,6 +50,10 @@ class HermesCalendarWatcherService : Service() {
         super.onDestroy()
     }
 
+    // The full edition declares this service as dataSync in the main manifest.
+    // The Play edition intentionally removes the watcher service; suppress lint's
+    // cross-variant manifest check for this implementation-only call site.
+    @SuppressLint("ForegroundServiceType")
     private fun promoteToForeground() {
         val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
