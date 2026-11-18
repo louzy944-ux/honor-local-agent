@@ -52,8 +52,13 @@ Not yet verified as complete end-to-end Android capabilities:
 - [x] Created isolated work branch.
 - [x] Re-read the capability audit and confirmed that Python web-search code already exists.
 - [x] Located the Chaquopy startup entry point in `HermesRuntimeManager.ensurePythonStarted`.
-- [ ] Implement and test the Android-native web-research bridge.
+- [x] Added `HermesPythonWebBridge` to call the existing `tools.web_tools.web_search_tool` through Chaquopy.
+- [x] Registered `web_search_tool` in native dispatch with request-scoped `query`/`limit` authority and a maximum of 10 results.
+- [x] Added Arabic and English search-intent routing plus unit tests for the offered tool schema.
+- [ ] Complete Android CI, compile, and unit-test validation (draft PR #2; workflow is running).
 - [ ] Implement remaining capabilities in the order above.
 - [ ] Run full Android validation and produce a verified APK.
 
-No APK has been built or certified by this execution log.
+Validation tracking: draft PR #2 is open at https://github.com/louzy944-ux/honor-local-agent/pull/2. Android workflow run 44274007049 is in progress; SDK setup is still running, so no compile/test result is available yet.
+
+No APK has been built, downloaded, or certified by this execution log.
