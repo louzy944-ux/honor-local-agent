@@ -69,6 +69,9 @@ class HermesFloatingButtonService : Service() {
         super.onDestroy()
     }
 
+    // This service is intentionally removed from the Play distribution manifest.
+    // Keep its foreground-service implementation for the full edition only.
+    @SuppressLint("ForegroundServiceType")
     private fun promoteToForeground() {
         val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
