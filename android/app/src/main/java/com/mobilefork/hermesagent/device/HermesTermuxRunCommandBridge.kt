@@ -28,7 +28,7 @@ object HermesTermuxRunCommandBridge {
     private const val EXTRA_LABEL = "com.termux.RUN_COMMAND_COMMAND_LABEL"
     private const val EXTRA_DESCRIPTION = "com.termux.RUN_COMMAND_COMMAND_DESCRIPTION"
     private const val EXTRA_PENDING_INTENT = "com.termux.RUN_COMMAND_PENDING_INTENT"
-    private const val RESULT_BUNDLE = "com.termux.app.action.plugin_execution_command_result"
+    private const val RESULT_BUNDLE = "result"
 
     private val nextId = AtomicInteger(10_000)
     private val pending = java.util.concurrent.ConcurrentHashMap<Int, CompletableFuture<Bundle>>()
@@ -55,8 +55,6 @@ object HermesTermuxRunCommandBridge {
                 putExtra(EXTRA_ARGS, emptyArray<String>())
                 putExtra(EXTRA_WORKDIR, "/data/data/com.termux/files/home")
                 putExtra(EXTRA_BACKGROUND, true)
-                putExtra(EXTRA_LABEL, "Hermes Termux connection test")
-                putExtra(EXTRA_DESCRIPTION, "Runs only pwd to verify the Termux bridge.")
                 putExtra(EXTRA_PENDING_INTENT, callbackPendingIntent)
             }
             app.startService(command)
@@ -64,7 +62,7 @@ object HermesTermuxRunCommandBridge {
             val result = future.get(timeoutSeconds.coerceIn(5, 30), TimeUnit.SECONDS)
             val stdout = result.getString("stdout").orEmpty()
             val stderr = result.getString("stderr").orEmpty()
-            val exitCode = result.getInt("exit_code", 125)
+            val exitCode = result.getInt("exitCode", 125)
             return JSONObject()
                 .put("ok", exitCode == 0)
                 .put("exit_code", exitCode)
