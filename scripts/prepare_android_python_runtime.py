@@ -248,8 +248,10 @@ def prepare(output, work, *, lock_file=LOCK, requirements=REQUIREMENTS, reuse_to
     for package in ("jiter", "pydantic-core"):
         for abi in ABIS:
             result = work / f"{package}-{abi}"
+            source_cache = tooling / "native-source-cache" / f"{package}-{abi}"
+            source_cache.parent.mkdir(parents=True, exist_ok=True)
             run([python, helpers / "build_native.py", "--package", package, "--python", "3.13",
-                 "--abi", abi, "--build-only", "--source-cache", work / f"source-{package}-{abi}",
+                 "--abi", abi, "--build-only", "--source-cache", source_cache,
                  "--output", result], cwd=source, env=environment, timeout=3900)
             for wheel in (result / "wheels").glob("*.whl"):
                 shutil.copyfile(wheel, wheels / wheel.name)
