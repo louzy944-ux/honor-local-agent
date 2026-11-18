@@ -18,6 +18,38 @@ class NativeToolCallingChatClientTest {
         NativeToolCallingChatClient(RuntimeEnvironment.getApplication())
     }
     @Test
+    fun arabicWebSearchRequestOffersOnlyBoundedSearchTool() {
+        val specs = nativeClient.initialToolSpecsFor(
+            userText = "ابحث لي عن آخر أخبار أندرويد",
+            mode = "stable",
+            providerId = "local",
+            llamaCppRuntimeLane = "default",
+        )
+        assertEquals(1, specs.length())
+        val function = specs.getJSONObject(0).getJSONObject("function")
+        assertEquals("web_search_tool", function.getString("name"))
+        val parameters = function.getJSONObject("parameters")
+        val properties = parameters.getJSONObject("properties")
+        assertEquals(setOf("query", "limit"), properties.keys().asSequence().toSet())
+        assertEquals("query", parameters.getJSONArray("required").getString(0))
+    }
+
+    @Test
+    fun englishWebSearchRequestOffersWebSearchTool() {
+        val specs = nativeClient.initialToolSpecsFor(
+            userText = "Search the web for Android security updates",
+            mode = "stable",
+            providerId = "local",
+            llamaCppRuntimeLane = "default",
+        )
+        assertEquals(1, specs.length())
+        assertEquals(
+            "web_search_tool",
+            specs.getJSONObject(0).getJSONObject("function").getString("name"),
+        )
+    }
+
+    @Test
     fun arabicOpenSettingsRequestSelectsAndroidUiTool() {
         val specs = nativeClient.initialToolSpecsFor(
             userText = "افتح تطبيق الإعدادات في هاتفك",
