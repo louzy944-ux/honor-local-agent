@@ -123,6 +123,9 @@ object NativeAndroidShellTool {
         cancellationRequested: () -> Boolean,
     ): JSONObject {
         val appContext = context.applicationContext
+        if (command.trim() == "termux_probe") {
+            return HermesTermuxRunCommandBridge.runPwdProbe(appContext, timeoutSeconds)
+        }
         if (cancellationRequested()) {
             throw CancellationException("Native shell command was stopped before setup")
         }
