@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -68,6 +69,8 @@ class HermesRuntimeService : Service() {
         }
     }
 
+    // This full-edition service is removed from the Play manifest; retain the implementation for the full build.
+    @SuppressLint("ForegroundServiceType")
     private fun promoteToForeground(runtime: HermesRuntimeManager.RuntimeState?) {
         val notification = buildNotification(runtime)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
