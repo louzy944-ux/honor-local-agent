@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -101,6 +102,8 @@ class HermesLocationWatcherService : Service(), LocationListener {
         registeredProviders.clear()
     }
 
+    // This full-edition watcher is removed from the Play manifest; its runtime call remains for the full build.
+    @SuppressLint("ForegroundServiceType")
     private fun promoteToForeground() {
         val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
