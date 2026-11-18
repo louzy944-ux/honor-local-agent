@@ -2604,20 +2604,26 @@ class NativeToolCallingChatClient(
             }
             "android_system_tool" -> {
                 val action = when {
-                    "wifi" in actionText || "wi-fi" in actionText -> "open_wifi_panel"
-                    "bluetooth" in actionText -> "open_bluetooth_settings"
+                    "wifi" in actionText || "wi-fi" in actionText || "واي فاي" in actionText || "الواي فاي" in actionText -> "open_wifi_panel"
+                    "bluetooth" in actionText || "بلوتوث" in actionText -> "open_bluetooth_settings"
                     else -> "open_all_settings"
                 }
                 constraint(actions = setOf(action), allowedArguments = setOf("action"))
             }
             "android_ui_tool" -> when {
-                Regex("""\b(?:screenshot|screen snapshot|capture)\b|截屏|截图""").containsMatchIn(actionText) ->
+                Regex("""^(?:افتح|افتحي|قم بفتح|قوم بفتح|شغل|شغّل|روح إلى|اذهب إلى|ادخل إلى)\s+.{0,64}(?:الإعدادات|الاعدادات|إعدادات الهاتف|اعدادات الهاتف|البارامترات)""").containsMatchIn(actionText) ->
+                    constraint(
+                        actions = setOf("open_app", "launch_app"),
+                        exact = mapOf("package_name" to "com.android.settings"),
+                        allowedArguments = setOf("action", "package_name"),
+                    )
+                Regex("""\b(?:screenshot|screen snapshot|capture)\b|截屏|截图|(?:خذ|التقط|صور|صوّر|اعمل)\s+(?:لي\s+)?(?:لقطة|صورة)\s*(?:للشاشة|الشاشة)?|لقطة شاشة|صورة الشاشة""").containsMatchIn(actionText) ->
                     constraint(
                         actions = setOf("screenshot", "screen_image", "visual_snapshot", "capture_screenshot"),
                         allowedArguments = setOf("action"),
                     )
-                Regex("""^(?:tap|click|press)\b""").containsMatchIn(actionText) -> {
-                    val label = Regex("""^(?:tap|click|press)(?:\s+on)?(?:\s+the)?\s+(.+?)(?:\s+button)?[.!?]?$""")
+                Regex("""^(?:tap|click|press)\b|^(?:اضغط|انقر|اكبس)\s+(?:على\s+)?""").containsMatchIn(actionText) -> {
+                    val label = Regex("""^(?:(?:tap|click|press)(?:\s+on)?(?:\s+the)?|(?:اضغط|انقر|اكبس)\s+(?:على\s+)?)(.+?)(?:\s+button)?[.!?؟،,؛;]?$""")
                         .matchEntire(actionText)
                         ?.groupValues
                         ?.getOrNull(1)
@@ -2646,10 +2652,10 @@ class NativeToolCallingChatClient(
             }
             "android_device_diagnostics_tool" -> {
                 val action = when {
-                    Regex("""\btop\s+apps?\b""").containsMatchIn(actionText) -> "top_apps"
-                    Regex("""\bwi-?fi\b""").containsMatchIn(actionText) -> "wifi_scan"
-                    Regex("""\bbluetooth\b""").containsMatchIn(actionText) -> "bluetooth_scan"
-                    Regex("""\b(?:sensor|accelerometer|gyroscope)""").containsMatchIn(actionText) -> "sensor_snapshot"
+                    Regex("""\btop\s+apps?\b|(?:أكثر|اعلى|أعلى)\s+التطبيقات\s+(?:استهلاكاً|استهلاكا|استهلاكًا|استخداماً|استخداما)|التطبيقات\s+الأكثر\s+استهلاكاً""").containsMatchIn(actionText) -> "top_apps"
+                    Regex("""\bwi-?fi\b|واي\s*فاي|الواي\s*فاي|شبكات\s+الواي""").containsMatchIn(actionText) -> "wifi_scan"
+                    Regex("""\bbluetooth\b|بلوتوث""").containsMatchIn(actionText) -> "bluetooth_scan"
+                    Regex("""\b(?:sensor|accelerometer|gyroscope)""").containsMatchIn(actionText) || Regex("""حساسات|المستشعرات|التسارع|الجيروسكوب|الجيروسكوبات""").containsMatchIn(actionText) -> "sensor_snapshot"
                     else -> "status"
                 }
                 constraint(actions = setOf(action), allowedArguments = setOf("action"))
@@ -3120,6 +3126,15 @@ class NativeToolCallingChatClient(
             }
             if (
                 startsWithAny(
+                    "افتح الإعدادات", "افتح الاعدادات", "افتح إعدادات الهاتف", "افتح اعدادات الهاتف",
+                    "افتح تطبيق الإعدادات", "افتح تطبيق الاعدادات", "قم بفتح الإعدادات", "قم بفتح الاعدادات",
+                    "شغل الإعدادات", "شغّل الإعدادات",
+                )
+            ) {
+                add("android_ui_tool")
+            }
+            if (
+                startsWithAny(
                     "open the settings", "open phone settings", "open android settings",
                     "打开设置", "打开手机设置",
                     "abre los ajustes", "abre la configuración", "abre la configuracion",
@@ -3194,6 +3209,28 @@ class NativeToolCallingChatClient(
                 )
             ) {
                 add("hy_memory_tool")
+            }
+            if (
+                startsWithAny(
+                    "افتح الرابط", "افتح هذا الرابط", "افتح المتصفح", "افتح موقع",
+                    "خذ لقطة شاشة", "التقط لقطة شاشة", "صور الشاشة", "صوّر الشاشة",
+                    "اضغط على ", "انقر على ", "اكبس على ",
+                    "اعرض حالة الهاتف", "اعرض حالة الجهاز", "تحقق من حالة الهاتف",
+                    "افحص حالة الهاتف", "اعرض حالة البطارية", "افحص البطارية",
+                    "اعرض التطبيقات الأكثر استهلاكاً", "اعرض التطبيقات الأكثر استهلاكا",
+                    "اعرض أكثر التطبيقات استهلاكاً", "اعرض أكثر التطبيقات استهلاكا",
+                    "افحص شبكات الواي فاي", "ابحث عن شبكات الواي فاي", "اعرض شبكات الواي فاي",
+                    "افحص البلوتوث", "اعرض أجهزة البلوتوث",
+                    "اعرض بيانات الحساسات", "افحص الحساسات", "اقرأ المستشعرات",
+                )
+            ) {
+                when {
+                    startsWithAny("افتح الرابط", "افتح هذا الرابط", "افتح المتصفح", "افتح موقع") ->
+                        add("android_automation_tool")
+                    startsWithAny("خذ لقطة شاشة", "التقط لقطة شاشة", "صور الشاشة", "صوّر الشاشة", "اضغط على ", "انقر على ", "اكبس على ") ->
+                        add("android_ui_tool")
+                    else -> add("android_device_diagnostics_tool")
+                }
             }
         }
     }
@@ -3304,6 +3341,7 @@ class NativeToolCallingChatClient(
             Regex("""^(?:what\s+do\s+you\s+remember|what\s+have\s+you\s+remembered|what(?:'s|\s+is)\b|which\b|who\s+is\b|where\s+am\s+i\b)"""),
             Regex("""^(?:sandbox status|linux sandbox status|alpine sandbox status|screenshot|screen snapshot|visible ui snapshot|device status|phone status|top apps|wifi scan|wi-fi scan|sensor snapshot|bluetooth scan)\s*[.!?]?$"""),
             Regex("""^(?:(?:请|请帮我|帮我|现在|今天|明天|后天|今晚|稍后)\s*)*(?:创建|写入|保存|追加|编辑|删除|运行|执行|列出|截屏|截图|点击|点按|打开|提醒我|设置提醒|设个提醒|创建提醒|安排任务|取消|记住)"""),
+            Regex("""^(?:افتح|افتحي|قم\s+بفتح|قوم\s+بفتح|شغل|شغّل|روح\s+إلى|اذهب\s+إلى|ادخل\s+إلى|اعرض|أظهر|اظهر|افحص|تحقق|اقرأ|صور|صوّر|خذ|اضغط|انقر|اكبس|ابحث)(?=$|\s)"""),
             Regex("""^(?:crea|escribe|guarda|añade|anade|edita|elimina|ejecuta|ejecute|lista|muestra|haz|toma|pulsa|toca|abre|recuérdame|recuerdame|configura|programa|cancela|recuerda)\b"""),
             Regex("""^(?:erstelle|schreibe|speichere|hänge|haenge|bearbeite|lösche|loesche|führe|fuehre|führ|liste|zeige|mache|tippe|klicke|öffne|offne|erinnere|stelle|plane|storniere|merke|behalte)\b"""),
             Regex("""^(?:crie|escreva|salve|adicione|edite|exclua|remova|execute|executa|liste|mostre|faça|faca|tire|toque|clique|abra|lembre|defina|agende|cancele|guarde)\b"""),

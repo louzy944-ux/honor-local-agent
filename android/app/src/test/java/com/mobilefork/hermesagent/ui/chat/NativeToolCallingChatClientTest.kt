@@ -7,9 +7,85 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import java.io.InterruptedIOException
 
+@RunWith(RobolectricTestRunner::class)
 class NativeToolCallingChatClientTest {
+    private val nativeClient by lazy {
+        NativeToolCallingChatClient(RuntimeEnvironment.getApplication())
+    }
+    @Test
+    fun arabicOpenSettingsRequestSelectsAndroidUiTool() {
+        val specs = nativeClient.initialToolSpecsFor(
+            userText = "افتح تطبيق الإعدادات في هاتفك",
+            mode = "stable",
+            providerId = "local",
+            llamaCppRuntimeLane = "default",
+        )
+        val names = (0 until specs.length()).mapNotNull { index ->
+            specs.optJSONObject(index)?.optJSONObject("function")?.optString("name")
+        }
+        assertTrue(names.contains("android_ui_tool"))
+        assertFalse(names.contains("android_system_tool"))
+    }
+
+    private fun offeredActionValues(userText: String, toolName: String): Set<String> {
+        val specs = nativeClient.initialToolSpecsFor(
+            userText = userText,
+            mode = "stable",
+            providerId = "local",
+            llamaCppRuntimeLane = "default",
+        )
+        val function = (0 until specs.length())
+            .mapNotNull { index -> specs.optJSONObject(index)?.optJSONObject("function") }
+            .first { it.optString("name") == toolName }
+        val action = function.getJSONObject("parameters")
+            .getJSONObject("properties")
+            .getJSONObject("action")
+        val values = action.optJSONArray("enum") ?: return emptySet()
+        return (0 until values.length()).map { values.getString(it) }.toSet()
+    }
+
+    @Test
+    fun arabicScreenshotRequestSelectsOnlyScreenshotActions() {
+        assertEquals(
+            setOf("screenshot", "screen_image", "visual_snapshot", "capture_screenshot"),
+            offeredActionValues("خذ لقطة شاشة", "android_ui_tool"),
+        )
+    }
+
+    @Test
+    fun arabicWifiScanRequestSelectsWifiDiagnostics() {
+        assertEquals(
+            setOf("wifi_scan"),
+            offeredActionValues("افحص شبكات الواي فاي", "android_device_diagnostics_tool"),
+        )
+    }
+
+    @Test
+    fun arabicTapRequestIsBoundToTheRequestedVisibleLabel() {
+        val specs = nativeClient.initialToolSpecsFor(
+            userText = "اضغط على زر حفظ",
+            mode = "stable",
+            providerId = "local",
+            llamaCppRuntimeLane = "default",
+        )
+        val function = (0 until specs.length())
+            .mapNotNull { index -> specs.optJSONObject(index)?.optJSONObject("function") }
+            .first { it.optString("name") == "android_ui_tool" }
+        val properties = function.getJSONObject("parameters").getJSONObject("properties")
+        assertEquals(
+            setOf("click"),
+            (0 until properties.getJSONObject("action").getJSONArray("enum").length())
+                .map { properties.getJSONObject("action").getJSONArray("enum").getString(it) }
+                .toSet(),
+        )
+        assertEquals(listOf("زر حفظ"), (0 until properties.getJSONObject("text_contains").getJSONArray("enum").length()).map { properties.getJSONObject("text_contains").getJSONArray("enum").getString(it) })
+    }
+
     @Test
     fun initialNativeMessagesIncludePriorConversationBeforeCurrentPrompt() {
         val messages = NativeToolCallingChatClient.buildInitialNativeMessages(
