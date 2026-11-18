@@ -3,10 +3,22 @@ description: Build the pinned genuine SDK bundle from source and trusted hash-lo
 runs:
   using: composite
   steps:
-    - name: Prepare source-built Python runtime outside the checkout
+    - name: Prepare reusable Python and Rust build tooling
       shell: bash
       run: |
         set -euo pipefail
+        tooling="$HOME/.cache/hermes-android-python-tooling"
+        mkdir -p "$tooling"
+        if [ ! -f "$tooling/drivers/pyvenv.cfg" ]; then
+          python3.13 -m venv "$tooling/drivers"
+        fi
+
+    - name: Build the pinned Android Python runtime using reusable tooling
+      shell: bash
+      run: |
+        set -euo pipefail
+        tooling="$HOME/.cache/hermes-android-python-tooling"
         python3.13 scripts/prepare_android_python_runtime.py prepare \
           --output "${GRADLE_USER_HOME:-$HOME/.gradle}/hermes-python-runtime" \
-          --work-dir "$RUNNER_TEMP/hermes-python-source-build"
+          --work-dir "$RUNNER_TEMP/hermes-python-source-build" \
+          --reuse-tooling "$tooling"
