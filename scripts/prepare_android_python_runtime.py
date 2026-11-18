@@ -224,6 +224,7 @@ def prepare(output, work, *, lock_file=LOCK, requirements=REQUIREMENTS, reuse_to
                    and not name.startswith(("PIP_", "CIBW_"))}
     environment.update(PYTHONHASHSEED="0", SOURCE_DATE_EPOCH=str(lock["build"]["source_date_epoch"]),
                        CARGO_HOME=str(tooling / "cargo"), RUSTUP_HOME=str(tooling / "rustup"),
+                       CARGO_TARGET_DIR=str(tooling / "cargo-target"),
                        RUSTUP_TOOLCHAIN=lock["build"]["rust_version"],
                        CARGO_BUILD_JOBS=str(lock["build"]["maximum_parallel_jobs"]),
                        PIP_CONFIG_FILE=os.devnull)
@@ -248,10 +249,8 @@ def prepare(output, work, *, lock_file=LOCK, requirements=REQUIREMENTS, reuse_to
     for package in ("jiter", "pydantic-core"):
         for abi in ABIS:
             result = work / f"{package}-{abi}"
-            source_cache = tooling / "native-source-cache" / f"{package}-{abi}"
-            source_cache.parent.mkdir(parents=True, exist_ok=True)
             run([python, helpers / "build_native.py", "--package", package, "--python", "3.13",
-                 "--abi", abi, "--build-only", "--source-cache", source_cache,
+                 "--abi", abi, "--build-only", "--source-cache", work / f"source-{package}-{abi}",
                  "--output", result], cwd=source, env=environment, timeout=3900)
             for wheel in (result / "wheels").glob("*.whl"):
                 shutil.copyfile(wheel, wheels / wheel.name)
