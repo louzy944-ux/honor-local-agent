@@ -50,6 +50,7 @@
         <activity android:name=".device.HermesTaskerPluginEditActivity" tools:node="remove" />
         <activity android:name=".device.HermesTaskerConditionEditActivity" tools:node="remove" />
         <activity android:name=".device.HermesTaskerEventEditActivity" tools:node="remove" />
+        <service android:name=".device.HermesTermuxResultService" tools:node="remove" />
         <service android:name=".backend.HermesRuntimeService" tools:node="remove" />
         <service android:name=".device.HermesFloatingButtonService" tools:node="remove" />
         <service android:name=".device.HermesLogcatWatcherService" tools:node="remove" />
